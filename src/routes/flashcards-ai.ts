@@ -2,6 +2,7 @@ import { Router } from "express";
 import prisma from "../utils/prisma";
 import { getUserIdFromRequest } from "../utils/user";
 import { authenticate } from "../middleware/auth";
+import { checkAICardsRateLimit } from "../middleware/rateLimit";
 import { getAIService } from "../services/ai.service";
 import type {
   GenerateFlashcardsOptions,
@@ -14,7 +15,7 @@ const router = Router();
  * POST /api/flashcards-ai/generate
  * Generate flashcards from text content using Vertex AI
  */
-router.post("/generate", authenticate, async (req, res) => {
+router.post("/generate", authenticate, checkAICardsRateLimit, async (req, res) => {
   try {
     const userId = getUserIdFromRequest(req);
     const {
@@ -62,6 +63,7 @@ router.post("/generate", authenticate, async (req, res) => {
             subject: options.subject || null,
             difficultyLevel: card.difficultyLevel || options.difficultyLevel || null,
             educationLevel: options.educationLevel || null,
+            isAIGenerated: true, // Mark as AI-generated
           },
           select: {
             id: true,
@@ -150,7 +152,7 @@ router.post("/preview", async (req, res) => {
  * POST /api/flashcards-ai/generate-from-topic
  * Generate flashcards from a topic/subject using AI (simpler than content-based)
  */
-router.post("/generate-from-topic", authenticate, async (req, res) => {
+router.post("/generate-from-topic", authenticate, checkAICardsRateLimit, async (req, res) => {
   try {
     const userId = getUserIdFromRequest(req);
     const {
@@ -204,6 +206,7 @@ router.post("/generate-from-topic", authenticate, async (req, res) => {
             subject: options.subject || null,
             difficultyLevel: card.difficultyLevel || options.difficultyLevel || null,
             educationLevel: options.educationLevel || null,
+            isAIGenerated: true, // Mark as AI-generated
           },
           select: {
             id: true,

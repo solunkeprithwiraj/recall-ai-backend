@@ -3,6 +3,7 @@ import prisma from "../utils/prisma";
 import { getUserIdFromRequest } from "../utils/user";
 import { authenticate } from "../middleware/auth";
 import { getAIService } from "../services/ai.service";
+import { checkAICardsDailyLimit, checkStudyModuleDailyLimit, getDailyUsageSummary } from "../utils/rateLimit";
 import type {
   GenerateStudyModuleOptions,
 } from "../services/ai.interface";
@@ -28,6 +29,41 @@ router.post("/ai/generate", authenticate, async (req, res) => {
       numberOfCards = 20,
       estimatedHours,
     } = req.body;
+
+    // Check rate limits before processing
+    const [studyModuleLimit, aiCardsLimit] = await Promise.all([
+      checkStudyModuleDailyLimit(userId),
+      checkAICardsDailyLimit(userId, numberOfCards),
+    ]);
+
+    // Check study module limit
+    if (!studyModuleLimit.allowed) {
+      return res.status(429).json({
+        error: "Daily rate limit exceeded",
+        message: `You have reached your daily limit of ${studyModuleLimit.limit} study modules. Please try again tomorrow.`,
+        limit: {
+          type: "study_modules",
+          current: studyModuleLimit.currentCount,
+          limit: studyModuleLimit.limit,
+          remaining: 0,
+        },
+      });
+    }
+
+    // Check AI cards limit
+    if (!aiCardsLimit.allowed) {
+      return res.status(429).json({
+        error: "Daily rate limit exceeded",
+        message: `You have reached your daily limit of ${aiCardsLimit.limit} AI-generated cards. You currently have ${aiCardsLimit.currentCount} cards today, and this module would create ${numberOfCards} more, which would exceed the limit. Please try again tomorrow or reduce the number of cards.`,
+        limit: {
+          type: "ai_cards",
+          current: aiCardsLimit.currentCount,
+          requested: numberOfCards,
+          limit: aiCardsLimit.limit,
+          remaining: aiCardsLimit.remaining,
+        },
+      });
+    }
 
     console.log(
       `[Study Module Generate] Generating module for topic: ${topic}`
@@ -128,6 +164,7 @@ router.post("/ai/generate", authenticate, async (req, res) => {
             moduleId: savedModule.id,
             questionType: card.questionType || null,
             options: card.options ? JSON.stringify(card.options) : null,
+            isAIGenerated: true, // Mark as AI-generated
           },
           select: {
             id: true,

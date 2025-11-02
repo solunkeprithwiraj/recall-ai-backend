@@ -71,6 +71,7 @@ model Flashcard {
     moduleId        String? // Optional reference to study module
     questionType    String? // multiple_choice, true_false, short_answer, fill_in_blank
     options         String? // JSON array of options for multiple choice questions
+    isAIGenerated   Boolean  @default(false) // Track if card was generated using AI
     createdAt       DateTime @default(now())
     updatedAt       DateTime @updatedAt
 

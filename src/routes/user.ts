@@ -2,6 +2,7 @@ import { Router } from "express";
 import prisma from "../utils/prisma";
 import { getUserIdFromRequest } from "../utils/user";
 import { authenticate } from "../middleware/auth";
+import { getDailyUsageSummary } from "../utils/rateLimit";
 
 const router = Router();
 
@@ -156,6 +157,29 @@ router.get("/stats", authenticate, async (req, res) => {
   } catch (error) {
     console.error("Error fetching user stats:", error);
     return res.status(500).json({ error: "Failed to fetch user stats" });
+  }
+});
+
+/**
+ * GET /api/user/rate-limits
+ * Get daily usage and rate limit information for the current user
+ */
+router.get("/rate-limits", authenticate, async (req, res) => {
+  try {
+    const userId = getUserIdFromRequest(req);
+    const usage = await getDailyUsageSummary(userId);
+
+    // Calculate reset time (start of next day in UTC)
+    const now = new Date();
+    const resetTime = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+
+    return res.json({
+      usage,
+      resetTime: resetTime.toISOString(),
+    });
+  } catch (error) {
+    console.error("Error fetching rate limit usage:", error);
+    return res.status(500).json({ error: "Failed to fetch rate limit usage" });
   }
 });
 

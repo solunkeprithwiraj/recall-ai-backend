@@ -24,6 +24,11 @@ import { validateAIConfig } from "./config/ai.config";
 // Load environment variables
 dotenv.config();
 
+// Set DIRECT_URL to DATABASE_URL if not provided (for local dev and simple setups)
+if (!process.env.DIRECT_URL && process.env.DATABASE_URL) {
+  process.env.DIRECT_URL = process.env.DATABASE_URL;
+}
+
 const app = express();
 // Railway and other platforms provide PORT via environment variable
 // Default to 5000 for local development
