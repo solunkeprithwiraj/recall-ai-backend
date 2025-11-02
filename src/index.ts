@@ -42,7 +42,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL 
+        ? process.env.FRONTEND_URL
           ? [process.env.FRONTEND_URL]
           : true // Allow all in production if FRONTEND_URL not set (for Railway)
         : true, // Allow all origins in development (needed for React Native)
@@ -102,9 +102,9 @@ app.listen(PORT, HOST, () => {
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`🌐 Server listening on ${HOST}:${PORT}`);
   console.log(`📱 For Android emulator, use: http://10.0.2.2:${PORT}`);
-  
+
   // Validate AI configuration after server starts
-  console.log('\n🤖 AI Configuration:');
+  console.log("\n🤖 AI Configuration:");
   validateAIConfig();
 });
 
