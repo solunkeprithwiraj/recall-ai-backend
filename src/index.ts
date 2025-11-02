@@ -38,14 +38,22 @@ app.use(
 );
 // CORS configuration - Allow all origins in development for React Native
 // In production, allow Vercel frontend URL and any specified FRONTEND_URL
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? process.env.FRONTEND_URL
+      ? [process.env.FRONTEND_URL]
+      : true // Allow all in production if FRONTEND_URL not set (for Railway)
+    : true; // Allow all origins in development (needed for React Native)
+
+console.log(
+  `CORS configured for: ${
+    allowedOrigins === true ? "all origins" : allowedOrigins.join(", ")
+  }`
+);
+
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL
-          ? [process.env.FRONTEND_URL]
-          : true // Allow all in production if FRONTEND_URL not set (for Railway)
-        : true, // Allow all origins in development (needed for React Native)
+    origin: allowedOrigins,
     credentials: true,
   })
 );
