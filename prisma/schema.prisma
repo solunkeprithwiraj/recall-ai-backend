@@ -6,8 +6,9 @@ generator client {
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+    provider  = "postgresql"
+    url       = env("DATABASE_URL")
+    directUrl = env("DIRECT_URL")
 }
 
 // Users table with age and education level
@@ -155,17 +156,17 @@ model ApiUsage {
 
 // Module progress tracking - tracks user progress through a study module
 model ModuleProgress {
-    id             String    @id @default(uuid())
-    userId         String
-    moduleId       String
-    currentCardIndex Int     @default(0) // Index of the last card studied (0-based)
-    cardsStudied   Int       @default(0) // Total number of cards studied in this module
-    totalCorrect   Int       @default(0) // Total number of correct answers
-    accuracy       Float?    // Calculated accuracy (0.0 to 1.0)
-    lastStudiedAt  DateTime? // Last time user studied this module
-    completedAt    DateTime? // When module was completed (all cards studied)
-    createdAt      DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
+    id               String    @id @default(uuid())
+    userId           String
+    moduleId         String
+    currentCardIndex Int       @default(0) // Index of the last card studied (0-based)
+    cardsStudied     Int       @default(0) // Total number of cards studied in this module
+    totalCorrect     Int       @default(0) // Total number of correct answers
+    accuracy         Float? // Calculated accuracy (0.0 to 1.0)
+    lastStudiedAt    DateTime? // Last time user studied this module
+    completedAt      DateTime? // When module was completed (all cards studied)
+    createdAt        DateTime  @default(now())
+    updatedAt        DateTime  @updatedAt
 
     // Relations
     user   User        @relation(fields: [userId], references: [id], onDelete: Cascade)
