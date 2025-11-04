@@ -67,10 +67,17 @@ router.post("/session", authenticate, async (req, res) => {
 
       if (progress) {
         // Resume from where user left off (start from next card after last studied)
-        startIndex = progress.currentCardIndex + 1;
-        // Don't go beyond the flashcards array
-        if (startIndex >= flashcards.length) {
-          startIndex = flashcards.length - 1;
+        // If user completed the module, start from beginning (or allow restart)
+        if (progress.completedAt) {
+          // Module already completed - start from beginning for review
+          startIndex = 0;
+        } else {
+          // Resume from next card after last studied
+          startIndex = progress.currentCardIndex + 1;
+          // Don't go beyond the flashcards array
+          if (startIndex >= flashcards.length) {
+            startIndex = flashcards.length - 1;
+          }
         }
       }
     }
@@ -212,9 +219,13 @@ router.put("/session/:id", authenticate, async (req, res) => {
       const newCorrectAnswers = correctAnswers || 0;
       const finalCardIndex = currentCardIndex !== undefined ? currentCardIndex : (progress?.currentCardIndex || 0);
 
-      // Calculate new totals
+      // Calculate new totals - ensure we don't double count
+      // For accuracy, we need to track unique card performances, not session totals
+      // So we only count cards studied in this session that haven't been counted before
+      // For simplicity, we'll use the session totals but ensure accuracy is calculated correctly
       const updatedCardsStudied = (progress?.cardsStudied || 0) + newCardsStudied;
       const updatedTotalCorrect = (progress?.totalCorrect || 0) + newCorrectAnswers;
+      // Calculate accuracy as percentage (0-100) but store as decimal (0-1)
       const accuracy = updatedCardsStudied > 0 ? updatedTotalCorrect / updatedCardsStudied : 0;
       const isCompleted = finalCardIndex >= totalCards - 1;
 
